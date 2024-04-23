@@ -2,7 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"os"
+
+	"github.com/edznux/lyfe/collectors/strava"
+	"github.com/edznux/lyfe/storage"
+	"github.com/edznux/lyfe/web/server"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -14,7 +19,16 @@ var cfgFile string
 var rootCmd = &cobra.Command{
 	Use:   "lyfe",
 	Short: "A brief description of your application",
-	Run:   func(cmd *cobra.Command, args []string) {},
+	Run: func(cmd *cobra.Command, args []string) {
+		store, err := storage.NewStore(cmd.Context())
+		if err != nil {
+			log.Fatal(err)
+		}
+		stravaCollector := strava.NewCollector(store)
+		stravaCollector.Init()
+		s := server.NewServer(store, stravaCollector)
+		s.Start()
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
